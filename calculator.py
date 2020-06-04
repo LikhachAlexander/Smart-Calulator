@@ -1,8 +1,9 @@
-def calculate(string: str) -> None:
-    expression = format_to_expr(string)
-    if isinstance(expression, str):
-        print("Invalid expression")
-        return
+from string import ascii_letters as alphabet
+
+variables = dict()
+
+
+def calculate(expression: list) -> None:
     result = int(expression[0])
     for i in range(1, len(expression) - 1, 2):
         sign = expression[i]
@@ -12,13 +13,13 @@ def calculate(string: str) -> None:
         if sign == '-':
             result -= number
 
-    print(result)
+    return result
 
 
 def format_to_expr(string: str) -> list or str:
     blocks = string.split()
     if len(blocks) % 2 == 0:
-        return "Error"
+        return None
     expression = []
     try:
         for value in blocks:
@@ -29,10 +30,17 @@ def format_to_expr(string: str) -> list or str:
                 else:
                     expression.append(int(sign))
             else:
-                number = int(value)
-                expression.append(number)
+                if check_naming(value):
+                    if value in variables.keys():
+                        expression.append(variables[value])
+                    else:
+                        print("Unknown variable")
+                        return None
+                else:
+                    number = int(value)
+                    expression.append(number)
     except ValueError:
-        return "Error"
+        return None
     else:
         return expression
 
@@ -50,6 +58,50 @@ def sign_fix(sign: str) -> str:
         return '-'
 
 
+def check_naming(string: str) -> bool:
+    for letter in string:
+        if letter not in alphabet:
+            return False
+    return True
+
+
+def add_variable(string: str):
+    global variables
+    elements = string.split('=', 1)
+    variable = elements[0].strip()
+    value = elements[1].strip()
+    # check identifier
+    if check_naming(variable):
+        # check if it's a pointer to existing var
+        if check_naming(value):
+            keys = variables.keys()
+            if value in keys:
+                variables[variable] = variables[value]
+            else:
+                print("Unknown variable")
+        else:
+            # check if is a number
+            try:
+                number = int(value)
+            except ValueError:
+                print("Invalid assignment")
+            else:
+                variables[variable] = number
+    else:
+        print("Invalid identifier")
+
+
+def process(string: str) -> None:
+    if '=' in string:
+        add_variable(string)
+    else:
+        expr = format_to_expr(string)
+        if expr is None:
+            return
+        else:
+            print(calculate(expr))
+
+
 while True:
     command = input()
     if len(command) == 0:
@@ -64,4 +116,4 @@ while True:
         else:
             print("Unknown command")
     else:
-        calculate(command)
+        process(command)
