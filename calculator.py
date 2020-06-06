@@ -1,48 +1,5 @@
 from string import ascii_letters as alphabet
-
-variables = dict()
-
-
-def calculate(expression: list) -> None:
-    result = int(expression[0])
-    for i in range(1, len(expression) - 1, 2):
-        sign = expression[i]
-        number = int(expression[i + 1])
-        if sign == '+':
-            result += number
-        if sign == '-':
-            result -= number
-
-    return result
-
-
-def format_to_expr(string: str) -> list or str:
-    blocks = string.split()
-    if len(blocks) % 2 == 0:
-        return None
-    expression = []
-    try:
-        for value in blocks:
-            if '+' in value or '-' in value:
-                sign = sign_fix(value)
-                if sign == "+" or sign == "-":
-                    expression.append(sign)
-                else:
-                    expression.append(int(sign))
-            else:
-                if check_naming(value):
-                    if value in variables.keys():
-                        expression.append(variables[value])
-                    else:
-                        print("Unknown variable")
-                        return None
-                else:
-                    number = int(value)
-                    expression.append(number)
-    except ValueError:
-        return None
-    else:
-        return expression
+from math import pi, e
 
 
 def sign_fix(sign: str) -> str:
@@ -58,49 +15,113 @@ def sign_fix(sign: str) -> str:
         return '-'
 
 
-def check_naming(string: str) -> bool:
-    for letter in string:
-        if letter not in alphabet:
-            return False
-    return True
+class Calculator:
+    operands = ['+', '-', '*', '/', '(', ')']
 
+    def __init__(self):
+        # variable storage
+        self.variables = {
+            "PI": pi,
+            "e": e
+        }
+        self.functions = {
+            "fact": Calculator.fact,
+            "exp": Calculator.exp
+        }
+        self.string = ""
 
-def add_variable(string: str):
-    global variables
-    elements = string.split('=', 1)
-    variable = elements[0].strip()
-    value = elements[1].strip()
-    # check identifier
-    if check_naming(variable):
-        # check if it's a pointer to existing var
-        if check_naming(value):
-            keys = variables.keys()
-            if value in keys:
-                variables[variable] = variables[value]
+    # split string by operands
+    @staticmethod
+    def format_to_infix(word: str) -> list:
+        string = word.replace(" ", "")
+        result = []
+        temp = ""
+        for letter in string:
+            if letter not in Calculator.operands:
+                temp += letter
             else:
-                print("Unknown variable")
+                if temp != "":
+                    result.append(temp)
+                    temp = ""
+                result.append(letter)
+        if temp != "":
+            result.append(temp)
+        return result
+
+    @staticmethod
+    def is_number(string: str) -> bool:
+        for letter in string:
+            if letter in alphabet:
+                return False
+        return True
+
+    @staticmethod
+    def is_int(string) -> bool:
+        for letter in string:
+            if letter in alphabet or letter == '.':
+                return False
+        return True
+
+    def fill_values(self, array):
+        result = []
+        var_names = self.variables.keys()
+        func_names = self.functions.keys()
+        function = False
+        counter = 0
+        for i in range(len(array)):
+            item = array[i]
+            if not function:
+                if item in self.operands:
+                    result.append(item)
+                elif item in var_names:
+                    result.append(self.variables[item])
+                elif item in func_names:
+                    argument = array[i + 2]
+                    if Calculator.is_number(argument):
+                        number = self.functions[item](float(argument))
+                        if number is None:
+                            print("Invalid argument")
+                            return None
+                        result.append(number)
+                        function = True
+                        counter = 4
+                    elif argument in var_names:
+                        number = self.functions[item](self.variables[argument])
+                        if number is None:
+                            print("Invalid argument")
+                            return None
+                        result.append(number)
+                        function = True
+                        counter = 4
+                    else:
+                        print("Invalid naming!")
+                        return None
+                elif Calculator.is_number(item):
+                    result.append(float(item))
+                else:
+                    print("Invalid naming!")
+                    return None
+
+            if function:
+                counter -= 1
+                if counter == 0:
+                    function = False
+        return result
+
+    # calculation functions
+    @staticmethod
+    def fact(n):
+        if n <= 1:
+            return 1
         else:
-            # check if is a number
-            try:
-                number = int(value)
-            except ValueError:
-                print("Invalid assignment")
-            else:
-                variables[variable] = number
-    else:
-        print("Invalid identifier")
+            return n * Calculator.fact(n - 1)
+
+    @staticmethod
+    def exp(x):
+        return e ** x
 
 
-def process(string: str) -> None:
-    if '=' in string:
-        add_variable(string)
-    else:
-        expr = format_to_expr(string)
-        if expr is None:
-            return
-        else:
-            print(calculate(expr))
-
+calculator = Calculator()
 
 while True:
     command = input()
@@ -116,4 +137,4 @@ while True:
         else:
             print("Unknown command")
     else:
-        process(command)
+        print(calculator.fill_values(Calculator.format_to_infix(command)))
