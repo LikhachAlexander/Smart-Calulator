@@ -1,6 +1,6 @@
 from collections import deque
 from math import pi, e
-from math import sin, cos, tan
+from math import sin, cos
 
 
 class Calculator:
