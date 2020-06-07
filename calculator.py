@@ -1,5 +1,6 @@
 from collections import deque
 from math import pi, e
+from math import sin, cos, tan
 
 
 class Calculator:
@@ -15,7 +16,9 @@ class Calculator:
         }
         self.functions = {
             "fact": Calculator.fact,
-            "exp": Calculator.exp
+            "exp": Calculator.exp,
+            "sin": sin,
+            "cos": cos
         }
         self.string = ""
 
@@ -68,27 +71,21 @@ class Calculator:
                     argument = array[i + 2]
                     if Calculator.is_number(argument):
                         number = self.functions[item](float(argument))
-                        if number is None:
-                            print("Invalid argument")
-                            return None
                         result.append(number)
                         function = True
                         counter = 4
                     elif argument in var_names:
                         number = self.functions[item](self.variables[argument])
-                        if number is None:
-                            print("Invalid argument")
-                            return None
                         result.append(number)
                         function = True
                         counter = 4
                     else:
-                        print("Invalid naming!")
+                        print("Invalid argument!")
                         return None
                 elif Calculator.is_number(item):
                     result.append(float(item))
                 else:
-                    print("Invalid naming!")
+                    print("Unknown variable!")
                     return None
 
             if function:
@@ -98,15 +95,21 @@ class Calculator:
         return result
 
     @staticmethod
-    def process_signs(array) -> list:
+    def process_signs(array) -> list or None:
         result = []
         minus_counter = 0
         plus_bool = False
         for item in array:
             if item == '+':
                 plus_bool = True
+                if minus_counter > 0:
+                    print("Invalid operators")
+                    return None
             elif item == '-':
                 minus_counter += 1
+                if plus_bool:
+                    print("Invalid operators")
+                    return None
             else:
                 if plus_bool:
                     result.append('+')
@@ -148,7 +151,7 @@ class Calculator:
         else:
             return 0
 
-    def expression_to_infix(self, string) -> list:
+    def expression_to_infix(self, string) -> list or None:
         expr = Calculator.format_to_infix(string)
         expr1 = self.fill_values(expr)
         if expr1 is not None:
@@ -157,9 +160,8 @@ class Calculator:
         else:
             return None
 
-    def convert_to_postfix(self, array: list) -> deque:
+    def convert_to_postfix(self, array: list) -> deque or None:
         array.append(')')
-        print(array)
         postfix = deque()
         stack = deque()
         stack.append('(')
@@ -188,17 +190,108 @@ class Calculator:
 
         return postfix
 
+    def calculate_expression(self, postfix: deque):
+        stack = deque()
+        for item in postfix:
+            if item not in self.operators:
+                if item is not None:
+                    stack.append(float(item))
+            else:
+                if len(stack) > 1:
+                    a = stack.pop()
+                    b = stack.pop()
+                    operator = item
+                    value = Calculator.binary_operation(b, a, operator)
+                    if value is not None:
+                        stack.append(value)
+                    else:
+                        print("Zero division!")
+                        return None
+                else:
+                    print("Invalid expression")
+                    return None
+        return stack.pop()
+
+    @staticmethod
+    def binary_operation(a, b, operator):
+        if operator == '+':
+            return a + b
+        elif operator == '-':
+            return a - b
+        elif operator == '*':
+            return a * b
+        elif operator == '/':
+            if b != 0:
+                return a / b
+            else:
+                return None
+        elif operator == '^':
+            return a ** b
+
+    def calculate(self, expression_string):
+        expr = Calculator.format_to_infix(expression_string)
+        # fill values
+        expr1 = self.fill_values(expr)
+        if expr1 is not None:
+            # count signs
+            expr2 = self.process_signs(expr1)
+            if expr2 is not None:
+                # count ()
+                is_valid = self.count_parenthesis(expr2)
+                if is_valid:
+                    # count it
+                    postfix = self.convert_to_postfix(expr2)
+                    value = self.calculate_expression(postfix)
+                    if value is not None:
+                        return value
+                else:
+                    print("Invalid expression")
+                    return None
+
+    def add_variable(self, string: str) -> None:
+        str_1, str_2 = string.split('=', 1)
+        var_name = str_1.strip()
+        for letter in var_name:
+            if letter in self.numbers:
+                print("Invalid name!")
+                return None
+        assignment = str_2.strip()
+        value = self.calculate(assignment)
+        if value is not None:
+            self.variables[var_name] = value
+        else:
+            print("Invalid assignment")
+
+    def process(self, string: str):
+        if '=' not in string:
+            # calculate expression
+            result = self.calculate(string)
+            if result is not None:
+                print(int(result))
+        else:
+            self.add_variable(string)
+
+    def run_command(self, commandlet):
+        commands = {
+            '/variables': self.variables,
+            '/help': 'This is complex expression calculator',
+            '/functions': self.functions
+        }
+        if commandlet in commands.keys():
+            print(commands[commandlet])
+        else:
+            print("Unknown command")
 
     # calculation functions
     @staticmethod
-    def fact(n):
+    def fact(n: float) -> float:
         if n <= 1:
             return 1
         else:
             return n * Calculator.fact(n - 1)
 
     @staticmethod
-    def exp(x):
+    def exp(x: float) -> float:
         return e ** x
 
 
@@ -209,13 +302,10 @@ while True:
     if len(command) == 0:
         continue
     elif command.startswith('/'):
-        if command == '/help':
-            print("The program calculates the sum of numbers")
-            continue
-        elif command == '/exit':
+        if command == '/exit':
             print("Bye!")
             break
         else:
-            print("Unknown command")
+            calculator.run_command(command)
     else:
-        print(calculator.convert_to_postfix( calculator.expression_to_infix(command)))
+        calculator.process(command)
