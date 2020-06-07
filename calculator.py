@@ -1,6 +1,6 @@
 from collections import deque
 from math import pi, e
-from math import sin, cos
+from math import sin, cos, log
 
 
 class Calculator:
@@ -18,7 +18,8 @@ class Calculator:
             "fact": Calculator.fact,
             "exp": Calculator.exp,
             "sin": sin,
-            "cos": cos
+            "cos": cos,
+            "log": log
         }
         self.string = ""
 
@@ -122,7 +123,30 @@ class Calculator:
                         result.append('-')
                     minus_counter = 0
                 result.append(item)
-        return result
+        if result[0] == '-':
+            result[1] = result[1] * -1
+            expr = result[1:]
+        else:
+            expr = result
+
+        end_res = []
+        left_par = False
+        minus = False
+        for item in expr:
+            if item == '(':
+                left_par = True
+                end_res.append(item)
+            elif item == '-' and left_par:
+                minus = True
+                left_par = False
+            elif minus:
+                end_res.append(float(item) * -1)
+                minus = False
+                left_par = False
+            else:
+                end_res.append(item)
+                left_par = False
+        return end_res
 
     @staticmethod
     def count_parenthesis(array) -> bool:
@@ -267,20 +291,25 @@ class Calculator:
             # calculate expression
             result = self.calculate(string)
             if result is not None:
-                print(int(result))
+                print(result)
         else:
             self.add_variable(string)
 
     def run_command(self, commandlet):
         commands = {
-            '/variables': self.variables,
-            '/help': 'This is complex expression calculator',
-            '/functions': self.functions
+            '/variables': 'variables\n\t' + '\n\t'.join(['"' + key + '": ' + str(name) for key, name in self.variables.items()]) ,
+            '/help': 'This is complex expression calculator.\n'
+                     'Type "/commands" to view available commands',
+            '/functions': 'functions\n\t' + '\n\t'.join(self.functions.keys())
         }
         if commandlet in commands.keys():
             print(commands[commandlet])
+        elif commandlet == '/commands':
+            for item in commands.keys():
+                print('\t', item)
+            print('\t', '/exit')
         else:
-            print("Unknown command")
+            print('Unknown command\nType "/help"')
 
     # calculation functions
     @staticmethod
@@ -298,7 +327,7 @@ class Calculator:
 calculator = Calculator()
 
 while True:
-    command = input()
+    command = input('>')
     if len(command) == 0:
         continue
     elif command.startswith('/'):
