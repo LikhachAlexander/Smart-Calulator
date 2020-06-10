@@ -1,12 +1,39 @@
 from collections import deque
+from string import ascii_letters as alphabet
 from math import pi, e
 from math import sin, cos, log
+import ctypes
 
 
 class Calculator:
     operators = ['^', '+', '-', '*', '/']
     parentheses = ['(', ')']
     numbers = "0123456789"
+    description = "<------------>\n" \
+                  "This is smart calculator for math expressions!\n" \
+                  "Type /help to view more info\n" \
+                  "<------------>\n"
+    example = """>a = 2
+>b = 2 * 3
+>c = a * b
+>/variables
+variables
+    "PI": 3.141592653589793
+    "e": 2.718281828459045
+    "a": 2.0
+    "b": 6.0
+    "c": 12.0
+>/functions
+functions
+    fact
+    exp
+    sin
+    cos
+    log
+>fact(c)
+479001600.0
+>a + 2 * b + c * (a + b)
+110.0\n"""
 
     def __init__(self):
         # variable storage
@@ -22,6 +49,8 @@ class Calculator:
             "log": log
         }
         self.string = ""
+        ctypes.windll.kernel32.SetConsoleTitleA("Calculator")
+        print(Calculator.description)
 
     # split string by operands
     @staticmethod
@@ -253,30 +282,34 @@ class Calculator:
             return a ** b
 
     def calculate(self, expression_string):
-        expr = Calculator.format_to_infix(expression_string)
-        # fill values
-        expr1 = self.fill_values(expr)
-        if expr1 is not None:
-            # count signs
-            expr2 = self.process_signs(expr1)
-            if expr2 is not None:
-                # count ()
-                is_valid = self.count_parenthesis(expr2)
-                if is_valid:
-                    # count it
-                    postfix = self.convert_to_postfix(expr2)
-                    value = self.calculate_expression(postfix)
-                    if value is not None:
-                        return value
-                else:
-                    print("Invalid expression")
-                    return None
+        try:
+            expr = Calculator.format_to_infix(expression_string)
+            # fill values
+            expr1 = self.fill_values(expr)
+            if expr1 is not None:
+                # count signs
+                expr2 = self.process_signs(expr1)
+                if expr2 is not None:
+                    # count ()
+                    is_valid = self.count_parenthesis(expr2)
+                    if is_valid:
+                        # count it
+                        postfix = self.convert_to_postfix(expr2)
+                        value = self.calculate_expression(postfix)
+                        if value is not None:
+                            return value
+                    else:
+                        print("Invalid expression")
+                        return None
+        except Exception:
+            print("Invalid syntax. Error.\n")
+            return None
 
     def add_variable(self, string: str) -> None:
         str_1, str_2 = string.split('=', 1)
         var_name = str_1.strip()
         for letter in var_name:
-            if letter in self.numbers:
+            if letter in self.numbers or letter not in alphabet:
                 print("Invalid name!")
                 return None
         assignment = str_2.strip()
@@ -297,10 +330,13 @@ class Calculator:
 
     def run_command(self, commandlet):
         commands = {
-            '/variables': 'variables\n\t' + '\n\t'.join(['"' + key + '": ' + str(name) for key, name in self.variables.items()]) ,
+            '/variables': 'variables\n\t' + '\n\t'.join(['"' + key + '": ' + str(name) for key, name in self.variables.items()]),
             '/help': 'This is complex expression calculator.\n'
+                     'To use variables use template:\n'
+                     '\t<variable_name> = <value>\n'
                      'Type "/commands" to view available commands',
-            '/functions': 'functions\n\t' + '\n\t'.join(self.functions.keys())
+            '/functions': 'functions\n\t' + '\n\t'.join(self.functions.keys()),
+            '/example': "---\n" + Calculator.example + "---\n"
         }
         if commandlet in commands.keys():
             print(commands[commandlet])
