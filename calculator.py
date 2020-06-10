@@ -49,7 +49,7 @@ functions
             "log": log
         }
         self.string = ""
-        ctypes.windll.kernel32.SetConsoleTitleA("Calculator")
+        ctypes.windll.kernel32.SetConsoleTitleW("Calculator")
         print(Calculator.description)
 
     # split string by operands
@@ -336,7 +336,8 @@ functions
                      '\t<variable_name> = <value>\n'
                      'Type "/commands" to view available commands',
             '/functions': 'functions\n\t' + '\n\t'.join(self.functions.keys()),
-            '/example': "---\n" + Calculator.example + "---\n"
+            '/example': "---\n" + Calculator.example + "---\n",
+            '/symbols': "Allowed symbols:\n" + "\tOperators: {" + ', '.join(Calculator.operators) + "}\n\tNumbers: " + Calculator.numbers + "\n\tLetters: " + alphabet + "\n"
         }
         if commandlet in commands.keys():
             print(commands[commandlet])
