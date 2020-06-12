@@ -5,3 +5,6 @@ dist/
 # PyInstaller
 *.manifest
 *.spec
+
+# Icon 
+.ico
