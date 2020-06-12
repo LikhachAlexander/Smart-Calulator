@@ -26,6 +26,3 @@ functions
 >a + 2 * b + c * (a + b)
 110.0
 ```
-# TO-DO
-1. Add previous value variable
-2. Fix build folders after pyinstaller build
