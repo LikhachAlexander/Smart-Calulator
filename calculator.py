@@ -39,7 +39,8 @@ functions
         # variable storage
         self.variables = {
             "PI": pi,
-            "e": e
+            "e": e,
+            "back": 0
         }
         self.functions = {
             "fact": Calculator.fact,
@@ -325,6 +326,7 @@ functions
             result = self.calculate(string)
             if result is not None:
                 print(result)
+                self.variables["back"] = result
         else:
             self.add_variable(string)
 
