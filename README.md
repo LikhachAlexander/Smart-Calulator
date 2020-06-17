@@ -27,5 +27,4 @@ functions
 110.0
 ```
 # TO-DO
-1. Add previous value variable
-2. Fix build folders after pyinstaller build
+* Fix function argument reading
