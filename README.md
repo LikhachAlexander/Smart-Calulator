@@ -1,7 +1,12 @@
 # Smart-Calulator
 Smart calculator project from JetBrainsAcademy Python course
+# Features
+* variables
+* functions
+* access to previous result
+* commands(start with '/')
 # How to run
-You can run "calculator.py" script or run "dist/calculator.exe"
+Run "calculator.py" script
 # Example
 ```
 >a = 2
