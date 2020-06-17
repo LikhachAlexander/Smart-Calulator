@@ -26,5 +26,3 @@ functions
 >a + 2 * b + c * (a + b)
 110.0
 ```
-# TO-DO
-* Fix function argument reading
