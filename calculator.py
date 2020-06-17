@@ -1,7 +1,7 @@
 from collections import deque
 from string import ascii_letters as alphabet
 from math import pi, e
-from math import sin, cos, log
+from math import sin, cos, log, pow
 import ctypes
 
 
@@ -89,40 +89,44 @@ functions
         result = []
         var_names = self.variables.keys()
         func_names = self.functions.keys()
-        function = False
-        counter = 0
-        for i in range(len(array)):
-            item = array[i]
-            if not function:
-                if item in self.operators or item in self.parentheses:
-                    result.append(item)
-                elif item in var_names:
-                    result.append(self.variables[item])
-                elif item in func_names:
-                    argument = array[i + 2]
-                    if Calculator.is_number(argument):
-                        number = self.functions[item](float(argument))
-                        result.append(number)
-                        function = True
-                        counter = 4
-                    elif argument in var_names:
-                        number = self.functions[item](self.variables[argument])
-                        result.append(number)
-                        function = True
-                        counter = 4
-                    else:
-                        print("Invalid argument!")
-                        return None
-                elif Calculator.is_number(item):
-                    result.append(float(item))
-                else:
-                    print("Unknown variable!")
-                    return None
+        j = 0
+        step = 0
+        while j + step < len(array):
+            item = array[j + step]
+            if item in self.operators or item in self.parentheses:
+                result.append(item)
+            elif item in var_names:
+                result.append(self.variables[item])
+            elif item in func_names:
+                # read argument until () end
+                stack = deque()
+                arguments = []
+                stack.append('(')
+                arguments.append('(')
+                step += 1
+                while len(stack) > 0:
+                    step += 1
+                    part = array[j + step]
+                    if part == '(':
+                        stack.append('(')
+                    elif part == ')':
+                        stack.pop()
+                    arguments.append(part)
 
-            if function:
-                counter -= 1
-                if counter == 0:
-                    function = False
+                number = self.calculate(''.join([str(i) for i in arguments]))
+                if number is not None:
+                    result.append(self.functions[item](number))
+                else:
+                    print("Invalid argument!")
+                    return None
+                pass
+            elif Calculator.is_number(item):
+                result.append(float(item))
+            else:
+                print("Unknown variable!")
+                return None
+
+            j += 1
         return result
 
     @staticmethod
@@ -280,28 +284,34 @@ functions
             else:
                 return None
         elif operator == '^':
-            return a ** b
+            return pow(a, b)
 
     def calculate(self, expression_string):
         try:
             expr = Calculator.format_to_infix(expression_string)
-            # fill values
-            expr1 = self.fill_values(expr)
+            # signs
+            expr1 = self.process_signs(expr)
             if expr1 is not None:
-                # count signs
-                expr2 = self.process_signs(expr1)
-                if expr2 is not None:
-                    # count ()
-                    is_valid = self.count_parenthesis(expr2)
-                    if is_valid:
-                        # count it
+                # is valid ( )
+                is_valid = self.count_parenthesis(expr1)
+                if is_valid:
+                    # fill values
+                    expr2 = self.fill_values(expr)
+                    if expr2 is not None:
+                        # postfix things
                         postfix = self.convert_to_postfix(expr2)
                         value = self.calculate_expression(postfix)
                         if value is not None:
                             return value
-                    else:
-                        print("Invalid expression")
-                        return None
+                        else:
+                            print("Invalid expression")
+                            return None
+                else:
+                    print("Invalid expression")
+                    return None
+            else:
+                print("Invalid expression")
+                return None
         except Exception:
             print("Invalid syntax. Error.\n")
             return None
