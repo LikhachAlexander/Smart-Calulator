@@ -6,7 +6,11 @@ Smart calculator project from JetBrainsAcademy Python course
 * access to previous result
 * commands(start with '/')
 # How to run
-Run "calculator.py" script
+* Run "calculator.py" script
+```
+python calculator.py
+```
+* Run cmd application in dist folder
 # Example
 ```
 >a = 2
